@@ -1,17 +1,16 @@
-name: Development
+name: Publish stories if changed
 
 on:
-  pull_request:
-    types:
-      - opened
-      - edited
-      - synchronize
-      - reopened
+  push:
+    branches:
+      - main
+    paths:
+      - stories/**
+      - src/components/**
   workflow_call:
 
 jobs:
-  test:
-    name: Test application
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -29,27 +28,14 @@ jobs:
       - name: "📦 install dependencies"
         uses: bahmutov/npm-install@v1
 
-      - name: "🔍 run tests"
-        run: npm run test --if-present
+      - name: "📦 build Storybook"
+        run: npx build-storybook
 
-  lint:
-    name: Code standards
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: "☁️ checkout repository"
-        uses: actions/checkout@v2
-
-      - name: "🔧 setup node"
-        uses: actions/setup-node@v2.1.5
+      - name: "🚀 deploy static"
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          node-version: 16
-
-      - name: "🔧 install npm@latest"
-        run: npm i -g npm@latest
-
-      - name: "📦 install dependencies"
-        uses: bahmutov/npm-install@v1
-
-      - name: "🔍 lint code"
-        run: npm run lint --if-present
+          publish_branch: storybook-static
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./storybook-static
+          commit_message: ${{ github.event.head_commit.message }}
+          enable_jekyll: false
